@@ -7,17 +7,19 @@ import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import * as THREE from 'three';
 
 const DEFAULT_CONFIG: SimulationConfig = {
-  pointSize: 0, 
+  pointSize: 0,
   trailThickness: 0.5,
-  useRealTrailThickness: true, 
+  useRealTrailThickness: true,
   displacementScale: 3.5,
   noiseSpeed: 0.3,
   noiseAmplitude: 0.3,
-  noiseScale: 0.5, 
-  trailLength: 2.0, 
-  noiseType: 1, 
-  particleColor: '#00ffff', 
+  noiseScale: 0.5,
+  trailLength: 2.0,
+  noiseType: 1,
+  particleColor: '#00ffff',
   particleCount: 40000, // Default 40k particles
+  enableColorFilter: false,
+  filterColor: '#ffffff', // Default to white
 };
 
 const App: React.FC = () => {
@@ -39,24 +41,72 @@ const App: React.FC = () => {
     setConfig(prev => ({ ...prev, ...newConfig }));
   };
 
-  // Helper to subsample points
-  const subsamplePoints = (
-      rawPos: Float32Array, 
-      rawCol: Float32Array | null, 
-      targetCount: number
+  // Helper to subsample points with optional color filtering
+  const subsamplePoints = useCallback((
+      rawPos: Float32Array,
+      rawCol: Float32Array | null,
+      targetCount: number,
+      enableColorFilter: boolean = false,
+      filterColor: string = '#ffffff'
   ) => {
       const total = rawPos.length / 3;
-      if (total <= targetCount) {
-          return { positions: rawPos, colors: rawCol };
+
+      // Convert filter color to RGB values (0-1 range)
+      let filterR = 1, filterG = 1, filterB = 1;
+      if (enableColorFilter && rawCol) {
+          const filterHex = filterColor.replace('#', '');
+          filterR = parseInt(filterHex.substr(0, 2), 16) / 255;
+          filterG = parseInt(filterHex.substr(2, 2), 16) / 255;
+          filterB = parseInt(filterHex.substr(4, 2), 16) / 255;
       }
 
-      const step = Math.ceil(total / targetCount);
-      const newCount = Math.floor(total / step);
+      // First pass: filter out points that match the filter color (if enabled)
+      const validIndices: number[] = [];
+      for (let i = 0; i < total; i++) {
+          if (enableColorFilter && rawCol) {
+              const r = rawCol[i * 3];
+              const g = rawCol[i * 3 + 1];
+              const b = rawCol[i * 3 + 2];
+
+              // Check if color matches (with small tolerance for floating point precision)
+              const tolerance = 0.01;
+              if (Math.abs(r - filterR) < tolerance &&
+                  Math.abs(g - filterG) < tolerance &&
+                  Math.abs(b - filterB) < tolerance) {
+                  continue; // Skip this point
+              }
+          }
+          validIndices.push(i);
+      }
+
+      const filteredTotal = validIndices.length;
+      if (filteredTotal <= targetCount) {
+          // No subsampling needed, just copy filtered points
+          const newPos = new Float32Array(filteredTotal * 3);
+          const newCol = rawCol ? new Float32Array(filteredTotal * 3) : null;
+
+          for (let i = 0; i < filteredTotal; i++) {
+              const srcIdx = validIndices[i];
+              newPos[i*3+0] = rawPos[srcIdx*3+0];
+              newPos[i*3+1] = rawPos[srcIdx*3+1];
+              newPos[i*3+2] = rawPos[srcIdx*3+2];
+              if (rawCol && newCol) {
+                  newCol[i*3+0] = rawCol[srcIdx*3+0];
+                  newCol[i*3+1] = rawCol[srcIdx*3+1];
+                  newCol[i*3+2] = rawCol[srcIdx*3+2];
+              }
+          }
+          return { positions: newPos, colors: newCol };
+      }
+
+      // Second pass: subsample from filtered points
+      const step = Math.ceil(filteredTotal / targetCount);
+      const newCount = Math.floor(filteredTotal / step);
       const newPos = new Float32Array(newCount * 3);
       const newCol = rawCol ? new Float32Array(newCount * 3) : null;
 
-      for(let i=0; i<newCount; i++) {
-          const srcIdx = i * step;
+      for (let i = 0; i < newCount; i++) {
+          const srcIdx = validIndices[i * step];
           newPos[i*3+0] = rawPos[srcIdx*3+0];
           newPos[i*3+1] = rawPos[srcIdx*3+1];
           newPos[i*3+2] = rawPos[srcIdx*3+2];
@@ -67,19 +117,25 @@ const App: React.FC = () => {
           }
       }
       return { positions: newPos, colors: newCol };
-  };
+  }, []);
 
-  // Re-run subsampling when particleCount changes or raw data changes
+  // Re-run subsampling when particleCount changes, color filtering changes, or raw data changes
   useEffect(() => {
     if (state.mode === 'ply' && state.rawPlyPositions) {
-        const { positions, colors } = subsamplePoints(state.rawPlyPositions, state.rawPlyColors, config.particleCount);
+        const { positions, colors } = subsamplePoints(
+            state.rawPlyPositions,
+            state.rawPlyColors,
+            config.particleCount,
+            config.enableColorFilter,
+            config.filterColor
+        );
         setState(prev => ({
             ...prev,
             plyPositions: positions,
             plyColors: colors
         }));
     }
-  }, [config.particleCount, state.rawPlyPositions, state.rawPlyColors, state.mode]);
+  }, [config.particleCount, config.enableColorFilter, config.filterColor, state.rawPlyPositions, state.rawPlyColors, state.mode, subsamplePoints]);
 
   const handleImageUpload = useCallback(async (file: File) => {
     // 1. PLY HANDLING

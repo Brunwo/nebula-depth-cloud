@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Sliders, AlertCircle, Play, Eye, Activity, Wind, Waves, ChevronDown, Settings2, Cylinder, BoxSelect, Gauge, Palette, Grid3X3 } from 'lucide-react';
+import { Upload, Sliders, AlertCircle, Play, Eye, Activity, Wind, Waves, ChevronDown, Settings2, Cylinder, BoxSelect, Gauge, Palette, Grid3X3, Zap } from 'lucide-react';
 import { PointCloudState, SimulationConfig } from '../types';
 
 interface UIProps {
@@ -12,6 +12,7 @@ interface UIProps {
 const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -94,6 +95,31 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                     <span className="text-xs font-bold uppercase tracking-widest">Simulation Config</span>
                   </div>
                 </div>
+
+                {/* Tab Buttons */}
+                <div className="flex bg-gray-800 rounded-lg p-1 mb-4">
+                  <button
+                    onClick={() => setActiveTab('basic')}
+                    className={`flex-1 py-1 px-3 rounded-md text-xs font-medium transition-all ${
+                      activeTab === 'basic' ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Basic
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('advanced')}
+                    className={`flex-1 py-1 px-3 rounded-md text-xs font-medium transition-all ${
+                      activeTab === 'advanced' ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Zap size={12} className="inline mr-1" />
+                    Advanced
+                  </button>
+                </div>
+
+                {/* Basic Tab Content */}
+                {activeTab === 'basic' && (
+                  <div className="space-y-5">
 
                 {/* Noise Type Toggle */}
                 <div className="space-y-2">
@@ -302,6 +328,47 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                     className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-400"
                   />
                 </div>
+                  </div>
+                )}
+
+                {/* Advanced Tab Content */}
+                {activeTab === 'advanced' && (
+                  <div className="space-y-5">
+                    {/* Color Filter Checkbox */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-gray-300">
+                        <div className="flex items-center gap-1"><BoxSelect size={12} /> Filter by Color</div>
+                      </div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={config.enableColorFilter}
+                          onChange={(e) => onConfigChange({ enableColorFilter: e.target.checked })}
+                          className="w-4 h-4 text-cyan-600 bg-gray-800 border-gray-600 rounded focus:ring-cyan-500 focus:ring-2"
+                        />
+                        <span className="text-xs text-gray-300">Remove points matching filter color</span>
+                      </label>
+                    </div>
+
+                    {/* Filter Color Picker */}
+                    {config.enableColorFilter && (
+                      <div className="space-y-2 animate-in fade-in zoom-in duration-300">
+                        <div className="flex justify-between text-xs text-gray-300">
+                          <div className="flex items-center gap-1"><Palette size={12} /> Filter Color</div>
+                          <span className="uppercase">{config.filterColor}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={config.filterColor}
+                            onChange={(e) => onConfigChange({ filterColor: e.target.value })}
+                            className="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
