@@ -20,6 +20,7 @@ const DEFAULT_CONFIG: SimulationConfig = {
   particleCount: 40000, // Default 40k particles
   enableColorFilter: false,
   filterColor: '#ffffff', // Default to white
+  upAxis: 'Y', // Default Y up
 };
 
 const App: React.FC = () => {

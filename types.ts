@@ -26,4 +26,5 @@ export interface SimulationConfig {
   particleCount: number; // Target number of particles
   enableColorFilter: boolean;
   filterColor: string;
+  upAxis: 'Y' | 'Z' | 'X'; // World up axis for camera
 }

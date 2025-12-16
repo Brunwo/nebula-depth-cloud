@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Sliders, AlertCircle, Play, Eye, Activity, Wind, Waves, ChevronDown, Settings2, Cylinder, BoxSelect, Gauge, Palette, Grid3X3, Zap } from 'lucide-react';
+import { Upload, Sliders, AlertCircle, Play, Eye, Activity, Wind, Waves, ChevronDown, Settings2, Cylinder, BoxSelect, Gauge, Palette, Grid3X3, Zap, RotateCcw } from 'lucide-react';
 import { PointCloudState, SimulationConfig } from '../types';
 
 interface UIProps {
@@ -171,6 +171,8 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                   </div>
                 </div>
 
+
+
                 {/* Particle Count Slider */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs text-gray-300">
@@ -334,6 +336,27 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                 {/* Advanced Tab Content */}
                 {activeTab === 'advanced' && (
                   <div className="space-y-5">
+                    {/* Up Axis Toggle */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-gray-300">
+                        <div className="flex items-center gap-1"><RotateCcw size={12} /> World Up Axis</div>
+                        <span className="font-mono">{config.upAxis}</span>
+                      </div>
+                      <div className="flex bg-gray-800 rounded-lg p-1">
+                        <button
+                          onClick={() => {
+                            const axes: ('Y' | 'Z' | 'X')[] = ['Y', 'Z', 'X'];
+                            const currentIndex = axes.indexOf(config.upAxis);
+                            const nextIndex = (currentIndex + 1) % axes.length;
+                            onConfigChange({ upAxis: axes[nextIndex] });
+                          }}
+                          className="flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-sm hover:from-cyan-500 hover:to-purple-500"
+                        >
+                          Cycle Axis
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Color Filter Checkbox */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs text-gray-300">
