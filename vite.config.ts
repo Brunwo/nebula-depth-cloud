@@ -11,7 +11,10 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
-      // No longer need HF API key environment variables - using Gradio client
+      define: {
+        'process.env.HF_API_KEY': JSON.stringify(env.HF_API_KEY),
+        'process.env.NEXT_PUBLIC_HF_API_KEY': JSON.stringify(env.NEXT_PUBLIC_HF_API_KEY)
+      },
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),

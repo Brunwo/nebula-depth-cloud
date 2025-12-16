@@ -21,8 +21,18 @@ const base64ToBlob = (base64: string, mimeType: string = 'image/jpeg'): Blob => 
 
 export const generateDepthMap = async (base64Image: string): Promise<string> => {
   try {
-    // Connect to the Gradio space
-    const client = await Client.connect(GRADIO_SPACE);
+    // Check for API key (optional - provides higher limits)
+    const apiKey = getApiKey();
+
+    // Connect to the Gradio space (with optional auth for higher limits)
+    const clientOptions: any = {};
+    if (apiKey) {
+      clientOptions.headers = {
+        'Authorization': `Bearer ${apiKey}`,
+      };
+    }
+
+    const client = await Client.connect(GRADIO_SPACE, clientOptions);
 
     // Convert base64 to blob
     const imageBlob = base64ToBlob(base64Image);
@@ -115,6 +125,9 @@ export const saveApiKey = (key: string) => {
 };
 
 const getApiKey = () => {
-  // No longer needed for Gradio client
-  return '';
+  // Check for API key (optional - provides higher limits when available)
+  return localStorage.getItem('hf_api_key') ||
+         process.env.HF_API_KEY ||
+         process.env.NEXT_PUBLIC_HF_API_KEY ||
+         '';
 };
