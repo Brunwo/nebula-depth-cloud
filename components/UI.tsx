@@ -173,7 +173,7 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
 
 
 
-                {/* Particle Count Slider */}
+                {/* Particle Count Slider (Exponential Scale) */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs text-gray-300">
                     <div className="flex items-center gap-1"><Grid3X3 size={12} /> Particle Count</div>
@@ -181,11 +181,15 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                   </div>
                   <input
                     type="range"
-                    min="5000"
-                    max="800000"
-                    step="5000"
-                    value={config.particleCount}
-                    onChange={(e) => onConfigChange({ particleCount: parseInt(e.target.value) })}
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={Math.max(0, Math.min(100, Math.round(Math.log10(Math.max(1000, config.particleCount)) * 20)))} // Convert particle count to slider position (min 1000 particles)
+                    onChange={(e) => {
+                      const sliderValue = parseInt(e.target.value);
+                      const particleCount = Math.max(1000, Math.min(1000000, Math.round(Math.pow(10, sliderValue / 20)))); // Convert slider position to particle count (1000 to 1M range)
+                      onConfigChange({ particleCount });
+                    }}
                     className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                   />
                 </div>
