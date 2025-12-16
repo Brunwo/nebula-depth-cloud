@@ -44,6 +44,7 @@ const PlyTrailMaterialSimple = {
     uniform float uTrailLength;
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
+    uniform float uTimeRandomizationScale;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
 
@@ -111,6 +112,7 @@ const PlyTrailMaterialRibbon = {
     uniform float uTrailThickness;
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
+    uniform float uTimeRandomizationScale;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
 
@@ -197,6 +199,7 @@ const PlyHeadMaterial = {
     uniform float uNoiseScale;
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
+    uniform float uTimeRandomizationScale;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
 
