@@ -27,4 +27,5 @@ export interface SimulationConfig {
   enableColorFilter: boolean;
   filterColor: string;
   upAxis: 'Y' | 'Z' | 'X'; // World up axis for camera
+  autoDetectAxis?: boolean; // Flag to trigger auto-detection
 }

@@ -342,7 +342,7 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                         <div className="flex items-center gap-1"><RotateCcw size={12} /> World Up Axis</div>
                         <span className="font-mono">{config.upAxis}</span>
                       </div>
-                      <div className="flex bg-gray-800 rounded-lg p-1">
+                      <div className="flex bg-gray-800 rounded-lg p-1 gap-1">
                         <button
                           onClick={() => {
                             const axes: ('Y' | 'Z' | 'X')[] = ['Y', 'Z', 'X'];
@@ -352,7 +352,16 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                           }}
                           className="flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-sm hover:from-cyan-500 hover:to-purple-500"
                         >
-                          Cycle Axis
+                          Cycle
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Auto-detect will be handled in App.tsx
+                            onConfigChange({ autoDetectAxis: true });
+                          }}
+                          className="flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm hover:from-purple-500 hover:to-pink-500"
+                        >
+                          Auto
                         </button>
                       </div>
                     </div>

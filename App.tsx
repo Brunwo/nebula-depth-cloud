@@ -120,6 +120,52 @@ const App: React.FC = () => {
       return { positions: newPos, colors: newCol };
   }, []);
 
+  // Auto-detect up axis when requested
+  useEffect(() => {
+    if (config.autoDetectAxis && state.mode === 'ply' && state.rawPlyPositions) {
+      const positions = state.rawPlyPositions;
+      const count = positions.length / 3;
+
+      // Calculate bounding box
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+
+      for (let i = 0; i < count; i++) {
+        const x = positions[i * 3];
+        const y = positions[i * 3 + 1];
+        const z = positions[i * 3 + 2];
+
+        minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
+      }
+
+      const sizeX = maxX - minX;
+      const sizeY = maxY - minY;
+      const sizeZ = maxZ - minZ;
+
+      // Find the longest dimension - this is often the "height" in the original software
+      const maxSize = Math.max(sizeX, sizeY, sizeZ);
+      let detectedUpAxis: 'Y' | 'Z' | 'X' = 'Y';
+
+      if (sizeY === maxSize) {
+        detectedUpAxis = 'Y';
+      } else if (sizeZ === maxSize) {
+        detectedUpAxis = 'Z';
+      } else {
+        detectedUpAxis = 'X';
+      }
+
+      // Update the config with detected axis and reset the auto-detect flag
+      setConfig(prev => ({
+        ...prev,
+        upAxis: detectedUpAxis,
+        autoDetectAxis: false
+      }));
+    }
+  }, [config.autoDetectAxis, state.mode, state.rawPlyPositions]);
+
   // Re-run subsampling when particleCount changes, color filtering changes, or raw data changes
   useEffect(() => {
     if (state.mode === 'ply' && state.rawPlyPositions) {
