@@ -156,6 +156,53 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                   </div>
                 </div>
 
+                {/* Time Randomization Slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Zap size={12} /> Time Variation</div>
+                    <span className="font-mono">
+                      {config.timeRandomization === 0 ? 'Synchronized' :
+                       `${(config.timeRandomization * 100).toFixed(0)}% Random`}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={config.timeRandomization}
+                    onChange={(e) => onConfigChange({ timeRandomization: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-400"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Sync</span>
+                    <span>Random</span>
+                  </div>
+                </div>
+
+                {/* Time Randomization Scale Slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Gauge size={12} /> Time Range</div>
+                    <span className="font-mono">
+                      ±{(config.timeRandomizationScale * 5).toFixed(1)}s
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="3.0"
+                    step="0.1"
+                    value={config.timeRandomizationScale}
+                    onChange={(e) => onConfigChange({ timeRandomizationScale: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>±0.5s</span>
+                    <span>±15s</span>
+                  </div>
+                </div>
+
                  {/* Trail Thickness Mode Toggle */}
                  <div className="space-y-2">
                   <div className="flex justify-between text-xs text-gray-300">
@@ -258,8 +305,8 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                   />
                 </div>
 
-                {/* Noise Scale (Perlin Only) */}
-                {config.noiseType === 1 && (
+                {/* Noise Scale (Perlin Field) */}
+                {config.noiseBlend > 0.3 && (
                   <div className="space-y-2 animate-in fade-in zoom-in duration-300">
                     <div className="flex justify-between text-xs text-gray-300">
                       <div className="flex items-center gap-1"><Gauge size={12} /> Field Scale</div>

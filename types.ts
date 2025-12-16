@@ -22,6 +22,8 @@ export interface SimulationConfig {
   noiseScale: number;
   trailLength: number;
   noiseBlend: number; // 0.0 = Pure Turbulence, 1.0 = Pure Perlin Field
+  timeRandomization: number; // 0.0 = No randomization, 1.0 = Full randomization of particle timing
+  timeRandomizationScale: number; // Scale factor for randomization range (1.0 = ±5 seconds, 2.0 = ±10 seconds, etc.)
   particleColor: string;
   particleCount: number; // Target number of particles
   enableColorFilter: boolean;
