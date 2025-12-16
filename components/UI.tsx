@@ -1,17 +1,20 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Sliders, AlertCircle, Play, Eye, Activity, Wind, Waves, ChevronDown, Settings2, Cylinder, BoxSelect, Gauge, Palette, Grid3X3, Zap, RotateCcw } from 'lucide-react';
 import { PointCloudState, SimulationConfig } from '../types';
+import ApiKeysButton from './ApiKeysButton';
 
 interface UIProps {
   appState: PointCloudState;
   config: SimulationConfig;
   onImageUpload: (file: File) => void;
   onConfigChange: (newConfig: Partial<SimulationConfig>) => void;
+  onShowSetup?: () => void;
 }
 
-const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange }) => {
+const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange, onShowSetup }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,25 +34,31 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
 
   return (
     <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 z-10">
-      
+
       {/* Header */}
       <div className="flex justify-between items-start pointer-events-auto">
-        <div>
-          <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-sm">
-            NEBULA
-          </h1>
-          <p className="text-gray-400 text-xs font-mono tracking-widest mt-1 uppercase">
-            Depth Cloud Visualizer
-          </p>
+        <div className="flex items-center gap-4">
+          <ApiKeysButton
+            isApiKeysOpen={false}
+            onToggle={onShowSetup || (() => {})}
+          />
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-sm">
+              NEBULA
+            </h1>
+            <p className="text-gray-400 text-xs font-mono tracking-widest mt-1 uppercase">
+              Depth Cloud Visualizer
+            </p>
+          </div>
         </div>
-        
+
         <button
           onClick={triggerUpload}
           disabled={appState.isGenerating}
           className={`
             flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm transition-all duration-300 shadow-lg border border-white/10
-            ${appState.isGenerating 
-              ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
+            ${appState.isGenerating
+              ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
               : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-md hover:scale-105 active:scale-95'}
           `}
         >
@@ -65,12 +74,12 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
             </>
           )}
         </button>
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileChange} 
-          accept="image/*,.ply" 
-          className="hidden" 
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*,.ply"
+          className="hidden"
         />
       </div>
 
@@ -85,7 +94,7 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
       {/* Controls Panel & Toggle - Only show if we have content */}
       {hasContent && (
         <div className="self-end mt-auto pointer-events-auto flex flex-col items-end gap-4">
-            
+
             {/* Collapsible Settings Panel */}
             {isSettingsOpen && (
               <div className="w-80 bg-black/60 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-300 max-h-[70vh] overflow-y-auto custom-scrollbar">
@@ -408,7 +417,7 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
               </div>
             )}
 
-            {/* Toggle Button */}
+            {/* Settings Toggle Button */}
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
               className="w-12 h-12 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/10 backdrop-blur-xl shadow-lg transition-transform hover:scale-110 active:scale-95 group"

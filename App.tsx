@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Scene from './components/Scene';
 import UI from './components/UI';
+import SetupPage from './components/SetupPage';
 import { PointCloudState, SimulationConfig } from './types';
-import { generateDepthMap } from './services/geminiService';
+import { generateDepthMap } from './services/depthService';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import * as THREE from 'three';
 import { Upload, FileImage, File } from 'lucide-react';
@@ -39,6 +40,16 @@ const App: React.FC = () => {
 
   const [config, setConfig] = useState<SimulationConfig>(DEFAULT_CONFIG);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isSetupComplete, setIsSetupComplete] = useState(false);
+  const [showSetupPage, setShowSetupPage] = useState(false);
+
+  // Check if API key exists on app startup
+  useEffect(() => {
+    const existingKey = localStorage.getItem('hf_api_key') ||
+                       process.env.HF_API_KEY ||
+                       process.env.NEXT_PUBLIC_HF_API_KEY;
+    setIsSetupComplete(!!existingKey);
+  }, []);
 
   const handleConfigChange = (newConfig: Partial<SimulationConfig>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
@@ -324,6 +335,19 @@ const App: React.FC = () => {
   const hasContent = (state.mode === 'image' && state.originalImage && state.depthImage) ||
                      (state.mode === 'ply' && state.plyPositions);
 
+  // Show setup page if API key is not configured or if button was clicked
+  if (!isSetupComplete || showSetupPage) {
+    return (
+      <SetupPage
+        onComplete={() => {
+          setIsSetupComplete(true);
+          setShowSetupPage(false);
+        }}
+        onClose={() => setShowSetupPage(false)}
+      />
+    );
+  }
+
   return (
     <div
       className="relative w-screen h-screen overflow-hidden bg-neutral-900"
@@ -337,6 +361,7 @@ const App: React.FC = () => {
         config={config}
         onImageUpload={handleImageUpload}
         onConfigChange={handleConfigChange}
+        onShowSetup={() => setShowSetupPage(true)}
       />
 
       <div className="absolute inset-0 z-0">
@@ -366,6 +391,7 @@ const DropZone: React.FC<{
       onFileSelect(e.target.files[0]);
     }
   };
+
 };
 
 export default App;
