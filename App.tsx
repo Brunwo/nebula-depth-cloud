@@ -5,6 +5,7 @@ import { PointCloudState, SimulationConfig } from './types';
 import { generateDepthMap } from './services/geminiService';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import * as THREE from 'three';
+import { Upload, FileImage, File } from 'lucide-react';
 
 const DEFAULT_CONFIG: SimulationConfig = {
   pointSize: 0,
@@ -37,6 +38,7 @@ const App: React.FC = () => {
   });
 
   const [config, setConfig] = useState<SimulationConfig>(DEFAULT_CONFIG);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleConfigChange = (newConfig: Partial<SimulationConfig>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
@@ -290,29 +292,80 @@ const App: React.FC = () => {
     reader.readAsDataURL(file);
   }, []);
 
-  const hasContent = (state.mode === 'image' && state.originalImage && state.depthImage) || 
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleImageUpload(files[0]);
+    }
+  }, [handleImageUpload]);
+
+  const hasContent = (state.mode === 'image' && state.originalImage && state.depthImage) ||
                      (state.mode === 'ply' && state.plyPositions);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-neutral-900">
-      <UI 
-        appState={state} 
-        config={config} 
+    <div
+      className="relative w-screen h-screen overflow-hidden bg-neutral-900"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      <UI
+        appState={state}
+        config={config}
         onImageUpload={handleImageUpload}
         onConfigChange={handleConfigChange}
       />
-      
+
       <div className="absolute inset-0 z-0">
         {hasContent ? (
            <Scene appState={state} config={config} />
         ) : (
-            <div className="w-full h-full flex items-center justify-center bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-950 to-black">
-                <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-150 contrast-150"></div>
-            </div>
+          <DropZone isDragOver={isDragOver} onFileSelect={handleImageUpload} />
         )}
       </div>
     </div>
   );
+};
+
+// Drop Zone Component
+const DropZone: React.FC<{
+  isDragOver: boolean;
+  onFileSelect: (file: File) => void;
+}> = ({ isDragOver, onFileSelect }) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onFileSelect(e.target.files[0]);
+    }
+  };
 };
 
 export default App;
