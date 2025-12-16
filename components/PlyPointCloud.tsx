@@ -30,7 +30,7 @@ const PlyTrailMaterialSimple = {
     uNoiseSpeed: { value: 1.0 },
     uNoiseScale: { value: 0.5 },
     uTrailLength: { value: 0.5 },
-    uNoiseType: { value: 0 },
+    uNoiseBlend: { value: 1.0 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
   },
@@ -40,29 +40,29 @@ const PlyTrailMaterialSimple = {
     uniform float uNoiseSpeed;
     uniform float uNoiseScale;
     uniform float uTrailLength;
-    uniform int uNoiseType;
+    uniform float uNoiseBlend;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
-    
+
     attribute vec3 aColor;
     attribute vec3 aBasePosition;
-    attribute float aSegmentIndex; 
-    
+    attribute float aSegmentIndex;
+
     varying vec3 vColor;
 
     ${SHARED_GLSL}
 
     void main() {
       vColor = mix(uParticleColor, aColor, uUseVertexColors);
-      
+
       float speed = max(uNoiseSpeed, 0.1);
       float effectiveDuration = uTrailLength / speed;
       float timeLag = aSegmentIndex * effectiveDuration;
       float localTime = uTime - timeLag;
 
       vec3 finalPos = getDisplacedPosition(
-        vec2(0.0), 0.0, localTime, 
-        uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseType, uNoiseScale
+        vec2(0.0), 0.0, localTime,
+        uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
@@ -84,7 +84,7 @@ const PlyTrailMaterialRibbon = {
     uNoiseSpeed: { value: 1.0 },
     uNoiseScale: { value: 0.5 },
     uTrailLength: { value: 0.5 },
-    uNoiseType: { value: 0 },
+    uNoiseBlend: { value: 1.0 },
     uTrailThickness: { value: 0.1 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
@@ -96,22 +96,22 @@ const PlyTrailMaterialRibbon = {
     uniform float uNoiseScale;
     uniform float uTrailLength;
     uniform float uTrailThickness;
-    uniform int uNoiseType;
+    uniform float uNoiseBlend;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
-    
+
     attribute vec3 aColor;
     attribute vec3 aBasePosition;
     attribute float aSegmentIndex;
     attribute float aSide;
-    
+
     varying vec3 vColor;
 
     ${SHARED_GLSL}
 
     void main() {
       vColor = mix(uParticleColor, aColor, uUseVertexColors);
-      
+
       float speed = max(uNoiseSpeed, 0.1);
       float effectiveDuration = uTrailLength / speed;
       float timeLag = aSegmentIndex * effectiveDuration;
@@ -119,24 +119,24 @@ const PlyTrailMaterialRibbon = {
 
       // 1. Position
       vec3 pos = getDisplacedPosition(
-        vec2(0.0), 0.0, localTime, 
-        uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseType, uNoiseScale
+        vec2(0.0), 0.0, localTime,
+        uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       // 2. Next Position for Tangent
       float dt = 0.05 * effectiveDuration;
       vec3 nextPos = getDisplacedPosition(
-        vec2(0.0), 0.0, localTime + dt, 
-        uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseType, uNoiseScale
+        vec2(0.0), 0.0, localTime + dt,
+        uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       // 3. Expansion
       vec4 viewPos = modelViewMatrix * vec4(pos, 1.0);
       vec4 viewNextPos = modelViewMatrix * vec4(nextPos, 1.0);
-      
+
       vec3 tangent = normalize(viewNextPos.xyz - viewPos.xyz);
       if (length(viewNextPos.xyz - viewPos.xyz) < 0.0001) tangent = vec3(0.0, 1.0, 0.0);
-      
+
       vec3 viewDir = normalize(viewPos.xyz);
       vec3 sideVec = normalize(cross(viewDir, tangent));
 
@@ -161,7 +161,7 @@ const PlyHeadMaterial = {
     uNoiseAmplitude: { value: 0.5 },
     uNoiseSpeed: { value: 1.0 },
     uNoiseScale: { value: 0.5 },
-    uNoiseType: { value: 0 },
+    uNoiseBlend: { value: 1.0 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
   },
@@ -171,12 +171,12 @@ const PlyHeadMaterial = {
     uniform float uNoiseAmplitude;
     uniform float uNoiseSpeed;
     uniform float uNoiseScale;
-    uniform int uNoiseType;
+    uniform float uNoiseBlend;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
-    
-    attribute vec3 aColor; 
-    
+
+    attribute vec3 aColor;
+
     varying vec3 vColor;
 
     ${SHARED_GLSL}
@@ -185,8 +185,8 @@ const PlyHeadMaterial = {
       vColor = mix(uParticleColor, aColor, uUseVertexColors);
 
       vec3 finalPos = getDisplacedPosition(
-        vec2(0.0), 0.0, uTime, 
-        uNoiseAmplitude, uNoiseSpeed, 0.0, position, uNoiseType, uNoiseScale
+        vec2(0.0), 0.0, uTime,
+        uNoiseAmplitude, uNoiseSpeed, 0.0, position, uNoiseBlend, uNoiseScale
       );
 
       vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
@@ -318,7 +318,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
       mat.uniforms.uNoiseAmplitude.value = config.noiseAmplitude;
       mat.uniforms.uNoiseSpeed.value = config.noiseSpeed;
       mat.uniforms.uNoiseScale.value = config.noiseScale;
-      mat.uniforms.uNoiseType.value = config.noiseType;
+      mat.uniforms.uNoiseBlend.value = config.noiseBlend;
       mat.uniforms.uParticleColor.value = particleColorObj;
       mat.uniforms.uUseVertexColors.value = hasVertexColors ? 1.0 : 0.0;
     }
@@ -331,10 +331,10 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
       mat.uniforms.uNoiseSpeed.value = config.noiseSpeed;
       mat.uniforms.uNoiseScale.value = config.noiseScale;
       mat.uniforms.uTrailLength.value = config.trailLength;
-      mat.uniforms.uNoiseType.value = config.noiseType;
+      mat.uniforms.uNoiseBlend.value = config.noiseBlend;
       mat.uniforms.uParticleColor.value = particleColorObj;
       mat.uniforms.uUseVertexColors.value = hasVertexColors ? 1.0 : 0.0;
-      
+
       if (config.useRealTrailThickness && mat.uniforms.uTrailThickness) {
           mat.uniforms.uTrailThickness.value = config.trailThickness;
       }
@@ -348,7 +348,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
       uNoiseAmplitude: { value: config.noiseAmplitude },
       uNoiseSpeed: { value: config.noiseSpeed },
       uNoiseScale: { value: config.noiseScale },
-      uNoiseType: { value: config.noiseType },
+      uNoiseBlend: { value: config.noiseBlend },
       uParticleColor: { value: new THREE.Color(config.particleColor) },
       uUseVertexColors: { value: hasVertexColors ? 1.0 : 0.0 },
     },
@@ -368,7 +368,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
               uNoiseSpeed: { value: config.noiseSpeed },
               uNoiseScale: { value: config.noiseScale },
               uTrailLength: { value: config.trailLength },
-              uNoiseType: { value: config.noiseType },
+              uNoiseBlend: { value: config.noiseBlend },
               uTrailThickness: { value: config.trailThickness },
               uParticleColor: { value: new THREE.Color(config.particleColor) },
               uUseVertexColors: { value: hasVertexColors ? 1.0 : 0.0 },
@@ -388,7 +388,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
               uNoiseSpeed: { value: config.noiseSpeed },
               uNoiseScale: { value: config.noiseScale },
               uTrailLength: { value: config.trailLength },
-              uNoiseType: { value: config.noiseType },
+              uNoiseBlend: { value: config.noiseBlend },
               uParticleColor: { value: new THREE.Color(config.particleColor) },
               uUseVertexColors: { value: hasVertexColors ? 1.0 : 0.0 },
             },

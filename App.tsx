@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: SimulationConfig = {
   noiseAmplitude: 0.3,
   noiseScale: 0.5,
   trailLength: 2.0,
-  noiseType: 1,
+  noiseBlend: 1.0, // Start with Pure Perlin Field
   particleColor: '#00ffff',
   particleCount: 40000, // Default 40k particles
   enableColorFilter: false,

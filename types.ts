@@ -21,7 +21,7 @@ export interface SimulationConfig {
   noiseAmplitude: number;
   noiseScale: number;
   trailLength: number;
-  noiseType: number; // 0 = Turbulence (Curl), 1 = Perlin (Field)
+  noiseBlend: number; // 0.0 = Pure Turbulence, 1.0 = Pure Perlin Field
   particleColor: string;
   particleCount: number; // Target number of particles
   enableColorFilter: boolean;

@@ -109,37 +109,33 @@ export const SHARED_GLSL = `
   }
 
   // --- Displacement Logic ---
-  // Modified to optionally accept explicit depth or rely on position Z
-  vec3 getDisplacedPosition(vec2 uv, float depth, float time, float noiseAmp, float noiseSpeed, float dispScale, vec3 basePos, int noiseType, float noiseScale) {
+  // Modified to blend between turbulence and perlin field based on noiseBlend (0.0 = pure turbulence, 1.0 = pure perlin)
+  vec3 getDisplacedPosition(vec2 uv, float depth, float time, float noiseAmp, float noiseSpeed, float dispScale, vec3 basePos, float noiseBlend, float noiseScale) {
       vec3 pos = basePos;
-      
+
       // Depth displacement (Only applies if depth > 0, mostly for Image mode)
       // For PLY mode, basePos.z is already the depth, so 'depth' param might be 0 or unused
       pos.z += depth * dispScale;
 
       float t = time * noiseSpeed;
 
-      if (noiseType == 0) {
-        // TYPE 0: TURBULENCE (Original 2D slices)
-        float noiseX = snoise(vec2(pos.x * 1.5 + t, pos.y * 1.5));
-        float noiseY = snoise(vec2(pos.x * 1.5 - t, pos.y * 1.5 + 10.0));
-        float noiseZ = snoise(vec2(pos.x * 0.5, pos.y * 0.5 + t * 0.5));
-        
-        pos.x += noiseX * noiseAmp;
-        pos.y += noiseY * noiseAmp;
-        pos.z += noiseZ * (noiseAmp * 0.5);
+      // TURBULENCE (Original 2D slices)
+      float turbX = snoise(vec2(pos.x * 1.5 + t, pos.y * 1.5));
+      float turbY = snoise(vec2(pos.x * 1.5 - t, pos.y * 1.5 + 10.0));
+      float turbZ = snoise(vec2(pos.x * 0.5, pos.y * 0.5 + t * 0.5));
+      vec3 turbulence = vec3(turbX, turbY, turbZ * 0.5) * noiseAmp;
 
-      } else {
-        // TYPE 1: PERLIN FIELD (3D Volumetric)
-        vec3 s = pos * noiseScale; // controlled spatial scale
-        
-        float nx = snoise3D(vec3(s.x, s.y, s.z + t));
-        float ny = snoise3D(vec3(s.y + 13.5, s.z + t, s.x)); 
-        float nz = snoise3D(vec3(s.z - 11.0, s.x + t, s.y));
-        
-        pos += vec3(nx, ny, nz) * noiseAmp;
-      }
-      
+      // PERLIN FIELD (3D Volumetric)
+      vec3 s = pos * noiseScale; // controlled spatial scale
+      float perlinX = snoise3D(vec3(s.x, s.y, s.z + t));
+      float perlinY = snoise3D(vec3(s.y + 13.5, s.z + t, s.x));
+      float perlinZ = snoise3D(vec3(s.z - 11.0, s.x + t, s.y));
+      vec3 perlinField = vec3(perlinX, perlinY, perlinZ) * noiseAmp;
+
+      // Blend between turbulence and perlin field
+      vec3 noiseDisplacement = mix(turbulence, perlinField, noiseBlend);
+      pos += noiseDisplacement;
+
       return pos;
   }
 `;

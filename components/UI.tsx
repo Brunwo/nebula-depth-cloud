@@ -130,28 +130,29 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                 {activeTab === 'basic' && (
                   <div className="space-y-5">
 
-                {/* Noise Type Toggle */}
+                {/* Noise Blend Slider */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs text-gray-300">
                     <div className="flex items-center gap-1"><Waves size={12} /> Flow Mode</div>
+                    <span className="font-mono">
+                      {config.noiseBlend === 0 ? 'Turbulence' :
+                       config.noiseBlend === 1 ? 'Perlin Field' :
+                       `${(config.noiseBlend * 100).toFixed(0)}% Blend`}
+                    </span>
                   </div>
-                  <div className="flex bg-gray-800 rounded-lg p-1">
-                    <button
-                      onClick={() => onConfigChange({ noiseType: 0 })}
-                      className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
-                        config.noiseType === 0 ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      Turbulence
-                    </button>
-                    <button
-                      onClick={() => onConfigChange({ noiseType: 1 })}
-                      className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
-                        config.noiseType === 1 ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      Perlin Field
-                    </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={config.noiseBlend}
+                    onChange={(e) => onConfigChange({ noiseBlend: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Turbulence</span>
+                    <span>Blend</span>
+                    <span>Perlin Field</span>
                   </div>
                 </div>
 

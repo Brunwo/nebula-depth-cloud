@@ -34,7 +34,7 @@ const TrailMaterialSimple = {
     uNoiseSpeed: { value: 1.0 },
     uNoiseScale: { value: 0.5 },
     uTrailLength: { value: 0.5 },
-    uNoiseType: { value: 0 },
+    uNoiseBlend: { value: 1.0 },
   },
   vertexShader: `
     uniform sampler2D uDepthMap;
@@ -45,12 +45,12 @@ const TrailMaterialSimple = {
     uniform float uNoiseSpeed;
     uniform float uNoiseScale;
     uniform float uTrailLength;
-    uniform int uNoiseType;
-    
+    uniform float uNoiseBlend;
+
     attribute vec2 aReferenceUV;
     attribute vec3 aBasePosition;
-    attribute float aSegmentIndex; 
-    
+    attribute float aSegmentIndex;
+
     varying vec3 vColor;
 
     ${SHARED_GLSL}
@@ -66,8 +66,8 @@ const TrailMaterialSimple = {
       float localTime = uTime - timeLag;
 
       vec3 finalPos = getDisplacedPosition(
-        aReferenceUV, depth, localTime, 
-        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseType, uNoiseScale
+        aReferenceUV, depth, localTime,
+        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
@@ -93,7 +93,7 @@ const TrailMaterialRibbon = {
     uNoiseSpeed: { value: 1.0 },
     uNoiseScale: { value: 0.5 },
     uTrailLength: { value: 0.5 },
-    uNoiseType: { value: 0 },
+    uNoiseBlend: { value: 1.0 },
     uTrailThickness: { value: 0.1 },
   },
   vertexShader: `
@@ -106,13 +106,13 @@ const TrailMaterialRibbon = {
     uniform float uNoiseScale;
     uniform float uTrailLength;
     uniform float uTrailThickness;
-    uniform int uNoiseType;
-    
+    uniform float uNoiseBlend;
+
     attribute vec2 aReferenceUV;
     attribute vec3 aBasePosition;
-    attribute float aSegmentIndex; 
+    attribute float aSegmentIndex;
     attribute float aSide; // -1.0 or 1.0 for ribbon expansion
-    
+
     varying vec3 vColor;
 
     ${SHARED_GLSL}
@@ -129,15 +129,15 @@ const TrailMaterialRibbon = {
 
       // 1. Calculate Current Position
       vec3 pos = getDisplacedPosition(
-        aReferenceUV, depth, localTime, 
-        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseType, uNoiseScale
+        aReferenceUV, depth, localTime,
+        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       // 2. Calculate "Next" Position (slightly forward in time/path) to get tangent
       float dt = 0.05 * effectiveDuration; // Small delta
       vec3 nextPos = getDisplacedPosition(
-        aReferenceUV, depth, localTime + dt, 
-        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseType, uNoiseScale
+        aReferenceUV, depth, localTime + dt,
+        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       // 3. View Space Expansion (Billboarding)
@@ -148,11 +148,11 @@ const TrailMaterialRibbon = {
       if (length(viewNextPos.xyz - viewPos.xyz) < 0.0001) {
          tangent = vec3(0.0, 1.0, 0.0);
       }
-      
+
       vec3 viewDir = normalize(viewPos.xyz); // Vector from Camera to Point
       vec3 sideVec = normalize(cross(viewDir, tangent));
 
-      float width = uTrailThickness * 0.05; 
+      float width = uTrailThickness * 0.05;
       vec3 finalViewPos = viewPos.xyz + (sideVec * aSide * width);
 
       gl_Position = projectionMatrix * vec4(finalViewPos, 1.0);
@@ -176,7 +176,7 @@ const HeadMaterial = {
     uNoiseAmplitude: { value: 0.5 },
     uNoiseSpeed: { value: 1.0 },
     uNoiseScale: { value: 0.5 },
-    uNoiseType: { value: 0 },
+    uNoiseBlend: { value: 1.0 },
   },
   vertexShader: `
     uniform sampler2D uDepthMap;
@@ -187,8 +187,8 @@ const HeadMaterial = {
     uniform float uNoiseAmplitude;
     uniform float uNoiseSpeed;
     uniform float uNoiseScale;
-    uniform int uNoiseType;
-    
+    uniform float uNoiseBlend;
+
     varying vec3 vColor;
 
     ${SHARED_GLSL}
@@ -199,8 +199,8 @@ const HeadMaterial = {
       float depth = dot(depthRGB, vec3(0.299, 0.587, 0.114));
 
       vec3 finalPos = getDisplacedPosition(
-        uv, depth, uTime, 
-        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, position, uNoiseType, uNoiseScale
+        uv, depth, uTime,
+        uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, position, uNoiseBlend, uNoiseScale
       );
 
       vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
@@ -345,23 +345,23 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       mat.uniforms.uNoiseAmplitude.value = config.noiseAmplitude;
       mat.uniforms.uNoiseSpeed.value = config.noiseSpeed;
       mat.uniforms.uNoiseScale.value = config.noiseScale;
-      mat.uniforms.uNoiseType.value = config.noiseType;
+      mat.uniforms.uNoiseBlend.value = config.noiseBlend;
     }
 
     // Update Trails
     if (trailsRef.current) {
       // Cast to Mesh or LineSegments (both have material)
-      const mesh = trailsRef.current as THREE.Mesh; 
+      const mesh = trailsRef.current as THREE.Mesh;
       const mat = mesh.material as THREE.ShaderMaterial;
-      
+
       mat.uniforms.uTime.value = time;
       mat.uniforms.uDisplacementScale.value = config.displacementScale;
       mat.uniforms.uNoiseAmplitude.value = config.noiseAmplitude;
       mat.uniforms.uNoiseSpeed.value = config.noiseSpeed;
       mat.uniforms.uNoiseScale.value = config.noiseScale;
       mat.uniforms.uTrailLength.value = config.trailLength;
-      mat.uniforms.uNoiseType.value = config.noiseType;
-      
+      mat.uniforms.uNoiseBlend.value = config.noiseBlend;
+
       if (config.useRealTrailThickness && mat.uniforms.uTrailThickness) {
           mat.uniforms.uTrailThickness.value = config.trailThickness;
       }
@@ -378,7 +378,7 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       uNoiseAmplitude: { value: config.noiseAmplitude },
       uNoiseSpeed: { value: config.noiseSpeed },
       uNoiseScale: { value: config.noiseScale },
-      uNoiseType: { value: config.noiseType },
+      uNoiseBlend: { value: config.noiseBlend },
     },
     vertexShader: HeadMaterial.vertexShader,
     fragmentShader: HeadMaterial.fragmentShader,
@@ -399,7 +399,7 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
                 uNoiseSpeed: { value: config.noiseSpeed },
                 uNoiseScale: { value: config.noiseScale },
                 uTrailLength: { value: config.trailLength },
-                uNoiseType: { value: config.noiseType },
+                uNoiseBlend: { value: config.noiseBlend },
                 uTrailThickness: { value: config.trailThickness },
             },
             vertexShader: TrailMaterialRibbon.vertexShader,
@@ -420,7 +420,7 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
                 uNoiseSpeed: { value: config.noiseSpeed },
                 uNoiseScale: { value: config.noiseScale },
                 uTrailLength: { value: config.trailLength },
-                uNoiseType: { value: config.noiseType },
+                uNoiseBlend: { value: config.noiseBlend },
             },
             vertexShader: TrailMaterialSimple.vertexShader,
             fragmentShader: TrailMaterialSimple.fragmentShader,
