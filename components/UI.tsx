@@ -1,0 +1,335 @@
+import React, { useRef, useState } from 'react';
+import { Upload, Sliders, AlertCircle, Play, Eye, Activity, Wind, Waves, ChevronDown, Settings2, Cylinder, BoxSelect, Gauge, Palette, Grid3X3 } from 'lucide-react';
+import { PointCloudState, SimulationConfig } from '../types';
+
+interface UIProps {
+  appState: PointCloudState;
+  config: SimulationConfig;
+  onImageUpload: (file: File) => void;
+  onConfigChange: (newConfig: Partial<SimulationConfig>) => void;
+}
+
+const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onImageUpload(e.target.files[0]);
+    }
+  };
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const hasContent = (appState.mode === 'image' && appState.originalImage) || (appState.mode === 'ply' && appState.plyPositions);
+  
+  // Check if we are in PLY mode and have NO vertex colors
+  const showColorPicker = appState.mode === 'ply' && !appState.plyColors;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 z-10">
+      
+      {/* Header */}
+      <div className="flex justify-between items-start pointer-events-auto">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-sm">
+            NEBULA
+          </h1>
+          <p className="text-gray-400 text-xs font-mono tracking-widest mt-1 uppercase">
+            Depth Cloud Visualizer
+          </p>
+        </div>
+        
+        <button
+          onClick={triggerUpload}
+          disabled={appState.isGenerating}
+          className={`
+            flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm transition-all duration-300 shadow-lg border border-white/10
+            ${appState.isGenerating 
+              ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
+              : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-md hover:scale-105 active:scale-95'}
+          `}
+        >
+          {appState.isGenerating ? (
+            <>
+              <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <Upload size={16} />
+              <span>Upload Image / .PLY</span>
+            </>
+          )}
+        </button>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept="image/*,.ply" 
+          className="hidden" 
+        />
+      </div>
+
+      {/* Error Message */}
+      {appState.error && (
+        <div className="absolute top-24 left-6 right-6 mx-auto max-w-md bg-red-900/80 border border-red-500 text-red-100 px-4 py-3 rounded-lg backdrop-blur-md flex items-center gap-3 pointer-events-auto">
+          <AlertCircle size={20} />
+          <p className="text-sm">{appState.error}</p>
+        </div>
+      )}
+
+      {/* Controls Panel & Toggle - Only show if we have content */}
+      {hasContent && (
+        <div className="self-end mt-auto pointer-events-auto flex flex-col items-end gap-4">
+            
+            {/* Collapsible Settings Panel */}
+            {isSettingsOpen && (
+              <div className="w-80 bg-black/60 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-300 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div className="flex items-center justify-between text-cyan-300 border-b border-white/10 pb-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Sliders size={16} />
+                    <span className="text-xs font-bold uppercase tracking-widest">Simulation Config</span>
+                  </div>
+                </div>
+
+                {/* Noise Type Toggle */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Waves size={12} /> Flow Mode</div>
+                  </div>
+                  <div className="flex bg-gray-800 rounded-lg p-1">
+                    <button
+                      onClick={() => onConfigChange({ noiseType: 0 })}
+                      className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
+                        config.noiseType === 0 ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Turbulence
+                    </button>
+                    <button
+                      onClick={() => onConfigChange({ noiseType: 1 })}
+                      className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
+                        config.noiseType === 1 ? 'bg-cyan-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Perlin Field
+                    </button>
+                  </div>
+                </div>
+
+                 {/* Trail Thickness Mode Toggle */}
+                 <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Cylinder size={12} />Particles Thickness</div>
+                  </div>
+                  <div className="flex bg-gray-800 rounded-lg p-1">
+                    <button
+                      onClick={() => onConfigChange({ useRealTrailThickness: false })}
+                      className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
+                        !config.useRealTrailThickness ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      invariant (faster)
+                    </button>
+                    <button
+                      onClick={() => onConfigChange({ useRealTrailThickness: true })}
+                      className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
+                        config.useRealTrailThickness ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      relative to distance
+                    </button>
+                  </div>
+                </div>
+
+                {/* Particle Count Slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Grid3X3 size={12} /> Particle Count</div>
+                    <span>{config.particleCount.toLocaleString()}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5000"
+                    max="800000"
+                    step="5000"
+                    value={config.particleCount}
+                    onChange={(e) => onConfigChange({ particleCount: parseInt(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                </div>
+
+                {/* Particle Color (Only for colorless PLY) */}
+                {showColorPicker && (
+                  <div className="space-y-2 animate-in fade-in zoom-in duration-300">
+                    <div className="flex justify-between text-xs text-gray-300">
+                      <div className="flex items-center gap-1"><Palette size={12} /> Particle Color</div>
+                      <span className="uppercase">{config.particleColor}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={config.particleColor}
+                          onChange={(e) => onConfigChange({ particleColor: e.target.value })}
+                          className="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0"
+                        />
+                    </div>
+                  </div>
+                )}
+
+                {/* Displacement (Only for Images mostly, but can affect logic) */}
+                {appState.mode === 'image' && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-gray-300">
+                      <div className="flex items-center gap-1"><Eye size={12} /> Depth Scale</div>
+                      <span>{config.displacementScale.toFixed(1)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      value={config.displacementScale}
+                      onChange={(e) => onConfigChange({ displacementScale: parseFloat(e.target.value) })}
+                      className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    />
+                  </div>
+                )}
+
+                {/* Noise Amp */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Activity size={12} /> Amplitude</div>
+                    <span>{config.noiseAmplitude.toFixed(2)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.01"
+                    value={config.noiseAmplitude}
+                    onChange={(e) => onConfigChange({ noiseAmplitude: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-400"
+                  />
+                </div>
+
+                {/* Noise Scale (Perlin Only) */}
+                {config.noiseType === 1 && (
+                  <div className="space-y-2 animate-in fade-in zoom-in duration-300">
+                    <div className="flex justify-between text-xs text-gray-300">
+                      <div className="flex items-center gap-1"><Gauge size={12} /> Field Scale</div>
+                      <span>{config.noiseScale.toFixed(2)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.02"
+                      max="2.0"
+                      step="0.02"
+                      value={config.noiseScale}
+                      onChange={(e) => onConfigChange({ noiseScale: parseFloat(e.target.value) })}
+                      className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                    />
+                  </div>
+                )}
+
+                {/* Speed */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Play size={12} /> Speed</div>
+                    <span>{config.noiseSpeed.toFixed(2)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="5"
+                    step="0.02"
+                    value={config.noiseSpeed}
+                    onChange={(e) => onConfigChange({ noiseSpeed: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-400"
+                  />
+                </div>
+
+                {/* Trails */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Wind size={12} /> Trail Length</div>
+                    <span>{config.trailLength.toFixed(3)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="5.0"
+                    step="0.05"
+                    value={config.trailLength}
+                    onChange={(e) => onConfigChange({ trailLength: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-pink-400"
+                  />
+                </div>
+                
+                {/* Point Size */}
+                 <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1">Point Size (0 to hide)</div>
+                    <span>{config.pointSize.toFixed(2)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="3.5"
+                    step="0.02"
+                    value={config.pointSize}
+                    onChange={(e) => onConfigChange({ pointSize: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
+                  />
+                </div>
+
+                {/* Trail Thickness */}
+                 <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1">Trail Thickness (0 to hide)</div>
+                    <span>{config.trailThickness.toFixed(2)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="3.5"
+                    step="0.01"
+                    value={config.trailThickness}
+                    onChange={(e) => onConfigChange({ trailThickness: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-400"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Toggle Button */}
+            <button
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/10 backdrop-blur-xl shadow-lg transition-transform hover:scale-110 active:scale-95 group"
+              title={isSettingsOpen ? "Hide Settings" : "Show Settings"}
+            >
+              {isSettingsOpen ? (
+                <ChevronDown size={24} className="text-gray-300 group-hover:text-white" />
+              ) : (
+                <Settings2 size={24} className="text-cyan-400 group-hover:text-cyan-200" />
+              )}
+            </button>
+        </div>
+      )}
+      
+      {!hasContent && !appState.isGenerating && (
+         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center space-y-4 max-w-lg mx-auto p-6">
+                <div className="text-6xl text-white/5 font-black">DROP ZONE</div>
+                <p className="text-gray-400">Upload an image to generate a 3D depth cloud or a .PLY file for direct visualization.</p>
+            </div>
+         </div>
+      )}
+    </div>
+  );
+};
+
+export default UI;

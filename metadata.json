@@ -1,0 +1,5 @@
+{
+  "name": "Nebula Depth Cloud",
+  "description": "Transforms 2D images into animated 3D point clouds with trailing particle effects using Gemini-generated depth maps and WebGL.",
+  "requestFramePermissions": []
+}
