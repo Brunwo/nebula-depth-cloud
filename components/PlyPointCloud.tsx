@@ -119,6 +119,7 @@ const PlyTrailMaterialRibbon = {
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
+    uniform float uSpeedRandomization;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
 
@@ -370,6 +371,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
       mat.uniforms.uNoiseBlend.value = config.noiseBlend;
       mat.uniforms.uTimeRandomization.value = config.timeRandomization;
       mat.uniforms.uTimeRandomizationScale.value = config.timeRandomizationScale;
+      mat.uniforms.uSpeedRandomization.value = config.speedRandomization;
       mat.uniforms.uParticleColor.value = particleColorObj;
       mat.uniforms.uUseVertexColors.value = hasVertexColors ? 1.0 : 0.0;
     }
@@ -385,6 +387,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
       mat.uniforms.uNoiseBlend.value = config.noiseBlend;
       mat.uniforms.uTimeRandomization.value = config.timeRandomization;
       mat.uniforms.uTimeRandomizationScale.value = config.timeRandomizationScale;
+      mat.uniforms.uSpeedRandomization.value = config.speedRandomization;
       mat.uniforms.uParticleColor.value = particleColorObj;
       mat.uniforms.uUseVertexColors.value = hasVertexColors ? 1.0 : 0.0;
 
@@ -404,6 +407,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
       uNoiseBlend: { value: config.noiseBlend },
       uTimeRandomization: { value: config.timeRandomization },
       uTimeRandomizationScale: { value: config.timeRandomizationScale },
+      uSpeedRandomization: { value: config.speedRandomization },
       uParticleColor: { value: new THREE.Color(config.particleColor) },
       uUseVertexColors: { value: hasVertexColors ? 1.0 : 0.0 },
     },

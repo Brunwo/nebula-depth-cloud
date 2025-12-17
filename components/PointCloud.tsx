@@ -398,6 +398,8 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       mat.uniforms.uNoiseScale.value = config.noiseScale;
       mat.uniforms.uNoiseBlend.value = config.noiseBlend;
       mat.uniforms.uTimeRandomization.value = config.timeRandomization;
+      mat.uniforms.uTimeRandomizationScale.value = config.timeRandomizationScale;
+      mat.uniforms.uSpeedRandomization.value = config.speedRandomization;
     }
 
     // Update Trails
@@ -414,6 +416,8 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       mat.uniforms.uTrailLength.value = config.trailLength;
       mat.uniforms.uNoiseBlend.value = config.noiseBlend;
       mat.uniforms.uTimeRandomization.value = config.timeRandomization;
+      mat.uniforms.uTimeRandomizationScale.value = config.timeRandomizationScale;
+      mat.uniforms.uSpeedRandomization.value = config.speedRandomization;
 
       if (config.useRealTrailThickness && mat.uniforms.uTrailThickness) {
           mat.uniforms.uTrailThickness.value = config.trailThickness;
