@@ -395,28 +395,6 @@ const DropZone: React.FC<{
     }
   };
 
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div className="text-center space-y-4 max-w-lg mx-auto p-6">
-        <div className={`text-6xl text-white/5 font-black transition-all duration-300 ${isDragOver ? 'scale-110 text-cyan-400/20' : ''}`}>DROP ZONE</div>
-        <p className="text-gray-400">Upload an image to generate a 3D depth cloud or a .PLY file for direct visualization.</p>
-        <button
-          onClick={handleClick}
-          className="pointer-events-auto px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 backdrop-blur-md"
-        >
-          <Upload size={16} className="inline mr-2" />
-          Choose File
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*,.ply"
-          className="hidden"
-        />
-      </div>
-    </div>
-  );
 };
 
 export default App;
