@@ -203,6 +203,30 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                   </div>
                 </div>
 
+                {/* Speed Randomization Slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-300">
+                    <div className="flex items-center gap-1"><Zap size={12} /> Speed Variation</div>
+                    <span className="font-mono">
+                      {config.speedRandomization === 0 ? 'Uniform' :
+                       `${(config.speedRandomization * 100).toFixed(0)}% Random`}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={config.speedRandomization}
+                    onChange={(e) => onConfigChange({ speedRandomization: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-400"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Uniform</span>
+                    <span>Random</span>
+                  </div>
+                </div>
+
                  {/* Trail Thickness Mode Toggle */}
                  <div className="space-y-2">
                   <div className="flex justify-between text-xs text-gray-300">

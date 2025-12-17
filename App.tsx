@@ -20,6 +20,7 @@ const DEFAULT_CONFIG: SimulationConfig = {
   noiseBlend: 1.0, // Start with Pure Perlin Field
   timeRandomization: 0.5, // Moderate time randomization
   timeRandomizationScale: 1.0, // Standard randomization range (±5 seconds)
+  speedRandomization: 0.3, // Moderate speed randomization
   particleColor: '#00ffff',
   particleCount: 40000, // Default 40k particles
   enableColorFilter: false,

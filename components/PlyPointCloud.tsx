@@ -33,6 +33,7 @@ const PlyTrailMaterialSimple = {
     uNoiseBlend: { value: 1.0 },
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
+    uSpeedRandomization: { value: 0.3 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
   },
@@ -45,6 +46,7 @@ const PlyTrailMaterialSimple = {
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
+    uniform float uSpeedRandomization;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
 
@@ -72,8 +74,11 @@ const PlyTrailMaterialSimple = {
       float timeOffset = (hash(aBasePosition) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;
       float localTime = uTime - timeLag + timeOffset;
 
+      // Generate speed multiplier for particle variation
+      float speedMultiplier = 1.0 + (hash(aBasePosition + vec3(100.0, 200.0, 300.0)) - 0.5) * uSpeedRandomization * 1.5;
+
       vec3 finalPos = getDisplacedPosition(
-        vec2(0.0), 0.0, localTime, timeOffset, uTimeRandomizationScale,
+        vec2(0.0), 0.0, localTime, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
@@ -99,6 +104,7 @@ const PlyTrailMaterialRibbon = {
     uNoiseBlend: { value: 1.0 },
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
+    uSpeedRandomization: { value: 0.3 },
     uTrailThickness: { value: 0.1 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
@@ -141,16 +147,19 @@ const PlyTrailMaterialRibbon = {
       float timeOffset = (hash(aBasePosition) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;
       float localTime = uTime - timeLag + timeOffset;
 
+      // Generate speed multiplier for particle variation
+      float speedMultiplier = 1.0 + (hash(aBasePosition + vec3(100.0, 200.0, 300.0)) - 0.5) * uSpeedRandomization * 1.5;
+
       // 1. Position
       vec3 pos = getDisplacedPosition(
-        vec2(0.0), 0.0, localTime, timeOffset, uTimeRandomizationScale,
+        vec2(0.0), 0.0, localTime, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       // 2. Next Position for Tangent
       float dt = 0.05 * effectiveDuration;
       vec3 nextPos = getDisplacedPosition(
-        vec2(0.0), 0.0, localTime + dt, timeOffset, uTimeRandomizationScale,
+        vec2(0.0), 0.0, localTime + dt, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, 0.0, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
@@ -188,6 +197,7 @@ const PlyHeadMaterial = {
     uNoiseBlend: { value: 1.0 },
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
+    uSpeedRandomization: { value: 0.3 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
   },
@@ -220,8 +230,11 @@ const PlyHeadMaterial = {
       // Generate time offset based on particle position
       float timeOffset = (hash(position) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;
 
+      // Generate speed multiplier for particle variation
+      float speedMultiplier = 1.0 + (hash(position + vec3(100.0, 200.0, 300.0)) - 0.5) * uSpeedRandomization * 1.5;
+
       vec3 finalPos = getDisplacedPosition(
-        vec2(0.0), 0.0, uTime, timeOffset, uTimeRandomizationScale,
+        vec2(0.0), 0.0, uTime, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, 0.0, position, uNoiseBlend, uNoiseScale
       );
 
@@ -413,6 +426,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
               uNoiseBlend: { value: config.noiseBlend },
               uTimeRandomization: { value: config.timeRandomization },
               uTimeRandomizationScale: { value: config.timeRandomizationScale },
+              uSpeedRandomization: { value: config.speedRandomization },
               uTrailThickness: { value: config.trailThickness },
               uParticleColor: { value: new THREE.Color(config.particleColor) },
               uUseVertexColors: { value: hasVertexColors ? 1.0 : 0.0 },
@@ -435,6 +449,7 @@ const PlyPointCloud: React.FC<PlyPointCloudProps> = ({ positions, colors, config
               uNoiseBlend: { value: config.noiseBlend },
               uTimeRandomization: { value: config.timeRandomization },
               uTimeRandomizationScale: { value: config.timeRandomizationScale },
+              uSpeedRandomization: { value: config.speedRandomization },
               uParticleColor: { value: new THREE.Color(config.particleColor) },
               uUseVertexColors: { value: hasVertexColors ? 1.0 : 0.0 },
             },

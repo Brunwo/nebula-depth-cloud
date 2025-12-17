@@ -110,15 +110,15 @@ export const SHARED_GLSL = `
 
   // --- Displacement Logic ---
   // Modified to blend between turbulence and perlin field based on noiseBlend (0.0 = pure turbulence, 1.0 = pure perlin)
-  // Added timeOffset for particle-specific randomization with adjustable scale
-  vec3 getDisplacedPosition(vec2 uv, float depth, float time, float timeOffset, float timeOffsetScale, float noiseAmp, float noiseSpeed, float dispScale, vec3 basePos, float noiseBlend, float noiseScale) {
+  // Added timeOffset and speedMultiplier for particle-specific randomization
+  vec3 getDisplacedPosition(vec2 uv, float depth, float time, float timeOffset, float timeOffsetScale, float speedMultiplier, float noiseAmp, float noiseSpeed, float dispScale, vec3 basePos, float noiseBlend, float noiseScale) {
       vec3 pos = basePos;
 
       // Depth displacement (Only applies if depth > 0, mostly for Image mode)
       // For PLY mode, basePos.z is already the depth, so 'depth' param might be 0 or unused
       pos.z += depth * dispScale;
 
-      float t = (time + timeOffset) * noiseSpeed;
+      float t = (time + timeOffset) * noiseSpeed * speedMultiplier;
 
       // TURBULENCE (Original 2D slices)
       float turbX = snoise(vec2(pos.x * 1.5 + t, pos.y * 1.5));

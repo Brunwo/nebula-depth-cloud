@@ -37,6 +37,7 @@ const TrailMaterialSimple = {
     uNoiseBlend: { value: 1.0 },
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
+    uSpeedRandomization: { value: 0.3 },
   },
   vertexShader: `
     uniform sampler2D uDepthMap;
@@ -50,6 +51,7 @@ const TrailMaterialSimple = {
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
+    uniform float uSpeedRandomization;
 
     attribute vec2 aReferenceUV;
     attribute vec3 aBasePosition;
@@ -77,8 +79,11 @@ const TrailMaterialSimple = {
       float timeOffset = (hash(aBasePosition) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;
       float localTime = uTime - timeLag + timeOffset;
 
+      // Generate speed multiplier for particle variation
+      float speedMultiplier = 1.0 + (hash(aBasePosition + vec3(100.0, 200.0, 300.0)) - 0.5) * uSpeedRandomization * 1.5;
+
       vec3 finalPos = getDisplacedPosition(
-        aReferenceUV, depth, localTime, timeOffset, uTimeRandomizationScale,
+        aReferenceUV, depth, localTime, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
@@ -108,6 +113,7 @@ const TrailMaterialRibbon = {
     uNoiseBlend: { value: 1.0 },
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
+    uSpeedRandomization: { value: 0.3 },
     uTrailThickness: { value: 0.1 },
   },
   vertexShader: `
@@ -123,6 +129,7 @@ const TrailMaterialRibbon = {
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
+    uniform float uSpeedRandomization;
 
     attribute vec2 aReferenceUV;
     attribute vec3 aBasePosition;
@@ -151,16 +158,19 @@ const TrailMaterialRibbon = {
       float timeOffset = (hash(aBasePosition) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;
       float localTime = uTime - timeLag + timeOffset;
 
+      // Generate speed multiplier for particle variation
+      float speedMultiplier = 1.0 + (hash(aBasePosition + vec3(100.0, 200.0, 300.0)) - 0.5) * uSpeedRandomization * 1.5;
+
       // 1. Calculate Current Position
       vec3 pos = getDisplacedPosition(
-        aReferenceUV, depth, localTime, timeOffset, uTimeRandomizationScale,
+        aReferenceUV, depth, localTime, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
       // 2. Calculate "Next" Position (slightly forward in time/path) to get tangent
       float dt = 0.05 * effectiveDuration; // Small delta
       vec3 nextPos = getDisplacedPosition(
-        aReferenceUV, depth, localTime + dt, timeOffset, uTimeRandomizationScale,
+        aReferenceUV, depth, localTime + dt, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, aBasePosition, uNoiseBlend, uNoiseScale
       );
 
@@ -203,6 +213,7 @@ const HeadMaterial = {
     uNoiseBlend: { value: 1.0 },
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
+    uSpeedRandomization: { value: 0.3 },
   },
   vertexShader: `
     uniform sampler2D uDepthMap;
@@ -216,6 +227,7 @@ const HeadMaterial = {
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
+    uniform float uSpeedRandomization;
 
     varying vec3 vColor;
 
@@ -234,8 +246,11 @@ const HeadMaterial = {
       // Generate time offset based on particle position
       float timeOffset = (hash(position) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;
 
+      // Generate speed multiplier for particle variation
+      float speedMultiplier = 1.0 + (hash(position + vec3(100.0, 200.0, 300.0)) - 0.5) * uSpeedRandomization * 1.5;
+
       vec3 finalPos = getDisplacedPosition(
-        uv, depth, uTime, timeOffset, uTimeRandomizationScale,
+        uv, depth, uTime, timeOffset, uTimeRandomizationScale, speedMultiplier,
         uNoiseAmplitude, uNoiseSpeed, uDisplacementScale, position, uNoiseBlend, uNoiseScale
       );
 
@@ -419,6 +434,7 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       uNoiseBlend: { value: config.noiseBlend },
       uTimeRandomization: { value: config.timeRandomization },
       uTimeRandomizationScale: { value: config.timeRandomizationScale },
+      uSpeedRandomization: { value: config.speedRandomization },
     },
     vertexShader: HeadMaterial.vertexShader,
     fragmentShader: HeadMaterial.fragmentShader,
@@ -442,6 +458,7 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
                 uNoiseBlend: { value: config.noiseBlend },
                 uTimeRandomization: { value: config.timeRandomization },
                 uTimeRandomizationScale: { value: config.timeRandomizationScale },
+                uSpeedRandomization: { value: config.speedRandomization },
                 uTrailThickness: { value: config.trailThickness },
             },
             vertexShader: TrailMaterialRibbon.vertexShader,
@@ -465,6 +482,7 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
                 uNoiseBlend: { value: config.noiseBlend },
                 uTimeRandomization: { value: config.timeRandomization },
                 uTimeRandomizationScale: { value: config.timeRandomizationScale },
+                uSpeedRandomization: { value: config.speedRandomization },
             },
             vertexShader: TrailMaterialSimple.vertexShader,
             fragmentShader: TrailMaterialSimple.fragmentShader,
