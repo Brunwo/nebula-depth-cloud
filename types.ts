@@ -31,4 +31,6 @@ export interface SimulationConfig {
   filterColor: string;
   upAxis: 'Y' | 'Z' | 'X'; // World up axis for camera
   autoDetectAxis?: boolean; // Flag to trigger auto-detection
+  lightEmissionProportion: number; // Percentage (0-1) of particles that emit light
+  lightSelectionMode: 'brightness' | 'random'; // How to select emitting particles
 }

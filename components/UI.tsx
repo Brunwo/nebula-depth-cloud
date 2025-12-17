@@ -399,22 +399,73 @@ const UI: React.FC<UIProps> = ({ appState, config, onImageUpload, onConfigChange
                   />
                 </div>
 
-                {/* Trail Thickness */}
-                 <div className="space-y-2">
+                {/* Trail Thickness - Only show when using relative thickness mode */}
+                {config.useRealTrailThickness && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-gray-300">
+                      <div className="flex items-center gap-1">Trail Thickness (0 to hide)</div>
+                      <span>{config.trailThickness.toFixed(2)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="3.5"
+                      step="0.01"
+                      value={config.trailThickness}
+                      onChange={(e) => onConfigChange({ trailThickness: parseFloat(e.target.value) })}
+                      className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-400"
+                    />
+                  </div>
+                )}
+
+                {/* Light Emission Controls */}
+                <div className="space-y-2">
                   <div className="flex justify-between text-xs text-gray-300">
-                    <div className="flex items-center gap-1">Trail Thickness (0 to hide)</div>
-                    <span>{config.trailThickness.toFixed(2)}</span>
+                    <div className="flex items-center gap-1"><Zap size={12} /> Light Emission</div>
+                    <span>{(config.lightEmissionProportion * 100).toFixed(0)}%</span>
                   </div>
                   <input
                     type="range"
                     min="0"
-                    max="3.5"
+                    max="1"
                     step="0.01"
-                    value={config.trailThickness}
-                    onChange={(e) => onConfigChange({ trailThickness: parseFloat(e.target.value) })}
-                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-400"
+                    value={config.lightEmissionProportion}
+                    onChange={(e) => onConfigChange({ lightEmissionProportion: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
                   />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                  </div>
                 </div>
+
+                {/* Light Selection Mode */}
+                {config.lightEmissionProportion > 0 && (
+                  <div className="space-y-2 animate-in fade-in zoom-in duration-300">
+                    <div className="flex justify-between text-xs text-gray-300">
+                      <div className="flex items-center gap-1"><BoxSelect size={12} /> Selection Mode</div>
+                    </div>
+                    <div className="flex bg-gray-800 rounded-lg p-1">
+                      <button
+                        onClick={() => onConfigChange({ lightSelectionMode: 'brightness' })}
+                        className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
+                          config.lightSelectionMode === 'brightness' ? 'bg-yellow-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        Brightest
+                      </button>
+                      <button
+                        onClick={() => onConfigChange({ lightSelectionMode: 'random' })}
+                        className={`flex-1 py-1 px-2 rounded-md text-xs font-medium transition-all ${
+                          config.lightSelectionMode === 'random' ? 'bg-yellow-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        Random
+                      </button>
+                    </div>
+                  </div>
+                )}
                   </div>
                 )}
 

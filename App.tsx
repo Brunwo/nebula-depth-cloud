@@ -26,6 +26,8 @@ const DEFAULT_CONFIG: SimulationConfig = {
   enableColorFilter: false,
   filterColor: '#ffffff', // Default to white
   upAxis: 'Y', // Default Y up
+  lightEmissionProportion: 0.1, // 10% of particles emit light by default
+  lightSelectionMode: 'brightness', // Select brightest particles by default
 };
 
 const App: React.FC = () => {

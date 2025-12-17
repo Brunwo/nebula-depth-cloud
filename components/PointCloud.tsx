@@ -38,6 +38,8 @@ const TrailMaterialSimple = {
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
     uSpeedRandomization: { value: 0.3 },
+    uLightEmissionProportion: { value: 0.1 },
+    uLightSelectionMode: { value: 0 }, // 0 = brightness, 1 = random
   },
   vertexShader: `
     uniform sampler2D uDepthMap;
@@ -58,6 +60,7 @@ const TrailMaterialSimple = {
     attribute float aSegmentIndex;
 
     varying vec3 vColor;
+    varying float vIsEmitting;
 
     ${SHARED_GLSL}
 
@@ -70,6 +73,27 @@ const TrailMaterialSimple = {
       vColor = texture2D(uColorMap, aReferenceUV).rgb;
       vec3 depthRGB = texture2D(uDepthMap, aReferenceUV).rgb;
       float depth = dot(depthRGB, vec3(0.299, 0.587, 0.114));
+
+      // Calculate brightness for light emission selection
+      float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // luminance
+
+      // Determine if this particle should emit light
+      vIsEmitting = 0.0;
+      if (uLightEmissionProportion > 0.0) {
+        if (uLightSelectionMode == 0.0) {
+          // Brightness-based selection: brighter particles are more likely to emit
+          float emissionThreshold = 1.0 - uLightEmissionProportion;
+          if (brightness > emissionThreshold) {
+            vIsEmitting = 1.0;
+          }
+        } else {
+          // Random selection - stable per particle based on position hash
+          float randomValue = hash(aBasePosition);
+          if (randomValue < uLightEmissionProportion) {
+            vIsEmitting = 1.0;
+          }
+        }
+      }
 
       float speed = max(uNoiseSpeed, 0.1);
       float effectiveDuration = uTrailLength / speed;
@@ -93,8 +117,16 @@ const TrailMaterialSimple = {
   `,
   fragmentShader: `
     varying vec3 vColor;
+    varying float vIsEmitting;
     void main() {
-      gl_FragColor = vec4(vColor, 1.0);
+      vec3 finalColor = vColor;
+      if (vIsEmitting > 0.5) {
+        // Apply light emission effect: increase brightness and saturation
+        float brightness = dot(finalColor, vec3(0.299, 0.587, 0.114));
+        finalColor = mix(finalColor, vec3(brightness), 0.3); // Desaturate slightly
+        finalColor *= 1.5; // Make brighter
+      }
+      gl_FragColor = vec4(finalColor, 1.0);
     }
   `
 };
@@ -115,6 +147,8 @@ const TrailMaterialRibbon = {
     uTimeRandomizationScale: { value: 1.0 },
     uSpeedRandomization: { value: 0.3 },
     uTrailThickness: { value: 0.1 },
+    uLightEmissionProportion: { value: 0.1 },
+    uLightSelectionMode: { value: 0 }, // 0 = brightness, 1 = random
   },
   vertexShader: `
     uniform sampler2D uDepthMap;
@@ -130,6 +164,8 @@ const TrailMaterialRibbon = {
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
     uniform float uSpeedRandomization;
+    uniform float uLightEmissionProportion;
+    uniform float uLightSelectionMode;
 
     attribute vec2 aReferenceUV;
     attribute vec3 aBasePosition;
@@ -137,6 +173,7 @@ const TrailMaterialRibbon = {
     attribute float aSide; // -1.0 or 1.0 for ribbon expansion
 
     varying vec3 vColor;
+    varying float vIsEmitting;
 
     ${SHARED_GLSL}
 
@@ -149,6 +186,27 @@ const TrailMaterialRibbon = {
       vColor = texture2D(uColorMap, aReferenceUV).rgb;
       vec3 depthRGB = texture2D(uDepthMap, aReferenceUV).rgb;
       float depth = dot(depthRGB, vec3(0.299, 0.587, 0.114));
+
+      // Calculate brightness for light emission selection
+      float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // luminance
+
+      // Determine if this particle should emit light
+      vIsEmitting = 0.0;
+      if (uLightEmissionProportion > 0.0) {
+        if (uLightSelectionMode == 0.0) {
+          // Brightness-based selection: brighter particles are more likely to emit
+          float emissionThreshold = 1.0 - uLightEmissionProportion;
+          if (brightness > emissionThreshold) {
+            vIsEmitting = 1.0;
+          }
+        } else {
+          // Random selection - stable per particle based on position hash
+          float randomValue = hash(aBasePosition);
+          if (randomValue < uLightEmissionProportion) {
+            vIsEmitting = 1.0;
+          }
+        }
+      }
 
       float speed = max(uNoiseSpeed, 0.1);
       float effectiveDuration = uTrailLength / speed;
@@ -194,8 +252,16 @@ const TrailMaterialRibbon = {
   `,
   fragmentShader: `
     varying vec3 vColor;
+    varying float vIsEmitting;
     void main() {
-      gl_FragColor = vec4(vColor, 1.0);
+      vec3 finalColor = vColor;
+      if (vIsEmitting > 0.5) {
+        // Apply light emission effect: increase brightness and saturation
+        float brightness = dot(finalColor, vec3(0.299, 0.587, 0.114));
+        finalColor = mix(finalColor, vec3(brightness), 0.3); // Desaturate slightly
+        finalColor *= 1.5; // Make brighter
+      }
+      gl_FragColor = vec4(finalColor, 1.0);
     }
   `
 };
@@ -214,6 +280,8 @@ const HeadMaterial = {
     uTimeRandomization: { value: 0.5 },
     uTimeRandomizationScale: { value: 1.0 },
     uSpeedRandomization: { value: 0.3 },
+    uLightEmissionProportion: { value: 0.1 },
+    uLightSelectionMode: { value: 0 }, // 0 = brightness, 1 = random
   },
   vertexShader: `
     uniform sampler2D uDepthMap;
@@ -228,8 +296,11 @@ const HeadMaterial = {
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
     uniform float uSpeedRandomization;
+    uniform float uLightEmissionProportion;
+    uniform float uLightSelectionMode;
 
     varying vec3 vColor;
+    varying float vIsEmitting;
 
     ${SHARED_GLSL}
 
@@ -242,6 +313,27 @@ const HeadMaterial = {
       vColor = texture2D(uColorMap, uv).rgb;
       vec3 depthRGB = texture2D(uDepthMap, uv).rgb;
       float depth = dot(depthRGB, vec3(0.299, 0.587, 0.114));
+
+      // Calculate brightness for light emission selection
+      float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // luminance
+
+      // Determine if this particle should emit light
+      vIsEmitting = 0.0;
+      if (uLightEmissionProportion > 0.0) {
+        if (uLightSelectionMode == 0.0) {
+          // Brightness-based selection: brighter particles are more likely to emit
+          float emissionThreshold = 1.0 - uLightEmissionProportion;
+          if (brightness > emissionThreshold) {
+            vIsEmitting = 1.0;
+          }
+        } else {
+          // Random selection - stable per particle based on position hash
+          float randomValue = hash(position);
+          if (randomValue < uLightEmissionProportion) {
+            vIsEmitting = 1.0;
+          }
+        }
+      }
 
       // Generate time offset based on particle position
       float timeOffset = (hash(position) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;
@@ -261,9 +353,17 @@ const HeadMaterial = {
   `,
   fragmentShader: `
     varying vec3 vColor;
+    varying float vIsEmitting;
     void main() {
       if (length(gl_PointCoord - vec2(0.5, 0.5)) > 0.5) discard;
-      gl_FragColor = vec4(vColor, 1.0);
+      vec3 finalColor = vColor;
+      if (vIsEmitting > 0.5) {
+        // Apply light emission effect: increase brightness and saturation
+        float brightness = dot(finalColor, vec3(0.299, 0.587, 0.114));
+        finalColor = mix(finalColor, vec3(brightness), 0.3); // Desaturate slightly
+        finalColor *= 1.5; // Make brighter
+      }
+      gl_FragColor = vec4(finalColor, 1.0);
     }
   `
 };
@@ -400,6 +500,8 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       mat.uniforms.uTimeRandomization.value = config.timeRandomization;
       mat.uniforms.uTimeRandomizationScale.value = config.timeRandomizationScale;
       mat.uniforms.uSpeedRandomization.value = config.speedRandomization;
+      mat.uniforms.uLightEmissionProportion.value = config.lightEmissionProportion;
+      mat.uniforms.uLightSelectionMode.value = config.lightSelectionMode === 'brightness' ? 0 : 1;
     }
 
     // Update Trails
@@ -418,6 +520,8 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       mat.uniforms.uTimeRandomization.value = config.timeRandomization;
       mat.uniforms.uTimeRandomizationScale.value = config.timeRandomizationScale;
       mat.uniforms.uSpeedRandomization.value = config.speedRandomization;
+      mat.uniforms.uLightEmissionProportion.value = config.lightEmissionProportion;
+      mat.uniforms.uLightSelectionMode.value = config.lightSelectionMode === 'brightness' ? 0 : 1;
 
       if (config.useRealTrailThickness && mat.uniforms.uTrailThickness) {
           mat.uniforms.uTrailThickness.value = config.trailThickness;
@@ -439,6 +543,8 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
       uTimeRandomization: { value: config.timeRandomization },
       uTimeRandomizationScale: { value: config.timeRandomizationScale },
       uSpeedRandomization: { value: config.speedRandomization },
+      uLightEmissionProportion: { value: config.lightEmissionProportion },
+      uLightSelectionMode: { value: config.lightSelectionMode === 'brightness' ? 0 : 1 },
     },
     vertexShader: HeadMaterial.vertexShader,
     fragmentShader: HeadMaterial.fragmentShader,
@@ -464,6 +570,8 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
                 uTimeRandomizationScale: { value: config.timeRandomizationScale },
                 uSpeedRandomization: { value: config.speedRandomization },
                 uTrailThickness: { value: config.trailThickness },
+                uLightEmissionProportion: { value: config.lightEmissionProportion },
+                uLightSelectionMode: { value: config.lightSelectionMode === 'brightness' ? 0 : 1 },
             },
             vertexShader: TrailMaterialRibbon.vertexShader,
             fragmentShader: TrailMaterialRibbon.fragmentShader,
@@ -487,6 +595,8 @@ const PointCloud: React.FC<PointCloudProps> = ({ originalUrl, depthUrl, config }
                 uTimeRandomization: { value: config.timeRandomization },
                 uTimeRandomizationScale: { value: config.timeRandomizationScale },
                 uSpeedRandomization: { value: config.speedRandomization },
+                uLightEmissionProportion: { value: config.lightEmissionProportion },
+                uLightSelectionMode: { value: config.lightSelectionMode === 'brightness' ? 0 : 1 },
             },
             vertexShader: TrailMaterialSimple.vertexShader,
             fragmentShader: TrailMaterialSimple.fragmentShader,

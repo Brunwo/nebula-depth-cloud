@@ -36,6 +36,8 @@ const PlyTrailMaterialSimple = {
     uSpeedRandomization: { value: 0.3 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
+    uLightEmissionProportion: { value: 0.1 },
+    uLightSelectionMode: { value: 0 }, // 0 = brightness, 1 = random
   },
   vertexShader: `
     uniform float uTime;
@@ -49,12 +51,15 @@ const PlyTrailMaterialSimple = {
     uniform float uSpeedRandomization;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
+    uniform float uLightEmissionProportion;
+    uniform float uLightSelectionMode;
 
     attribute vec3 aColor;
     attribute vec3 aBasePosition;
     attribute float aSegmentIndex;
 
     varying vec3 vColor;
+    varying float vIsEmitting;
 
     ${SHARED_GLSL}
 
@@ -65,6 +70,27 @@ const PlyTrailMaterialSimple = {
 
     void main() {
       vColor = mix(uParticleColor, aColor, uUseVertexColors);
+
+      // Calculate brightness for light emission selection
+      float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // luminance
+
+      // Determine if this particle should emit light
+      vIsEmitting = 0.0;
+      if (uLightEmissionProportion > 0.0) {
+        if (uLightSelectionMode == 0.0) {
+          // Brightness-based selection: brighter particles are more likely to emit
+          float emissionThreshold = 1.0 - uLightEmissionProportion;
+          if (brightness > emissionThreshold) {
+            vIsEmitting = 1.0;
+          }
+        } else {
+          // Random selection - stable per particle based on position hash
+          float randomValue = hash(aBasePosition);
+          if (randomValue < uLightEmissionProportion) {
+            vIsEmitting = 1.0;
+          }
+        }
+      }
 
       float speed = max(uNoiseSpeed, 0.1);
       float effectiveDuration = uTrailLength / speed;
@@ -108,6 +134,8 @@ const PlyTrailMaterialRibbon = {
     uTrailThickness: { value: 0.1 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
+    uLightEmissionProportion: { value: 0.1 },
+    uLightSelectionMode: { value: 0 }, // 0 = brightness, 1 = random
   },
   vertexShader: `
     uniform float uTime;
@@ -122,6 +150,8 @@ const PlyTrailMaterialRibbon = {
     uniform float uSpeedRandomization;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
+    uniform float uLightEmissionProportion;
+    uniform float uLightSelectionMode;
 
     attribute vec3 aColor;
     attribute vec3 aBasePosition;
@@ -129,6 +159,7 @@ const PlyTrailMaterialRibbon = {
     attribute float aSide;
 
     varying vec3 vColor;
+    varying float vIsEmitting;
 
     ${SHARED_GLSL}
 
@@ -139,6 +170,27 @@ const PlyTrailMaterialRibbon = {
 
     void main() {
       vColor = mix(uParticleColor, aColor, uUseVertexColors);
+
+      // Calculate brightness for light emission selection
+      float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // luminance
+
+      // Determine if this particle should emit light
+      vIsEmitting = 0.0;
+      if (uLightEmissionProportion > 0.0) {
+        if (uLightSelectionMode == 0.0) {
+          // Brightness-based selection: brighter particles are more likely to emit
+          float emissionThreshold = 1.0 - uLightEmissionProportion;
+          if (brightness > emissionThreshold) {
+            vIsEmitting = 1.0;
+          }
+        } else {
+          // Random selection - stable per particle based on position hash
+          float randomValue = hash(aBasePosition);
+          if (randomValue < uLightEmissionProportion) {
+            vIsEmitting = 1.0;
+          }
+        }
+      }
 
       float speed = max(uNoiseSpeed, 0.1);
       float effectiveDuration = uTrailLength / speed;
@@ -201,6 +253,8 @@ const PlyHeadMaterial = {
     uSpeedRandomization: { value: 0.3 },
     uParticleColor: { value: new THREE.Color(1, 1, 1) },
     uUseVertexColors: { value: 0.0 },
+    uLightEmissionProportion: { value: 0.1 },
+    uLightSelectionMode: { value: 0 }, // 0 = brightness, 1 = random
   },
   vertexShader: `
     uniform float uTime;
@@ -211,12 +265,16 @@ const PlyHeadMaterial = {
     uniform float uNoiseBlend;
     uniform float uTimeRandomization;
     uniform float uTimeRandomizationScale;
+    uniform float uSpeedRandomization;
     uniform vec3 uParticleColor;
     uniform float uUseVertexColors;
+    uniform float uLightEmissionProportion;
+    uniform float uLightSelectionMode;
 
     attribute vec3 aColor;
 
     varying vec3 vColor;
+    varying float vIsEmitting;
 
     ${SHARED_GLSL}
 
@@ -227,6 +285,27 @@ const PlyHeadMaterial = {
 
     void main() {
       vColor = mix(uParticleColor, aColor, uUseVertexColors);
+
+      // Calculate brightness for light emission selection
+      float brightness = dot(vColor, vec3(0.299, 0.587, 0.114)); // luminance
+
+      // Determine if this particle should emit light
+      vIsEmitting = 0.0;
+      if (uLightEmissionProportion > 0.0) {
+        if (uLightSelectionMode == 0.0) {
+          // Brightness-based selection: brighter particles are more likely to emit
+          float emissionThreshold = 1.0 - uLightEmissionProportion;
+          if (brightness > emissionThreshold) {
+            vIsEmitting = 1.0;
+          }
+        } else {
+          // Random selection - stable per particle based on position hash
+          float randomValue = hash(position);
+          if (randomValue < uLightEmissionProportion) {
+            vIsEmitting = 1.0;
+          }
+        }
+      }
 
       // Generate time offset based on particle position
       float timeOffset = (hash(position) - 0.5) * uTimeRandomization * uTimeRandomizationScale * 5.0;

@@ -78,10 +78,10 @@ const UpAxisIndicator: React.FC<{ upAxis: 'Y' | 'Z' | 'X'; show: boolean }> = ({
 const Scene: React.FC<SceneProps> = ({ appState, config }) => {
   const [showIndicator, setShowIndicator] = useState(false);
 
-  const handleAxisChange = () => {
+  const handleAxisChange = React.useCallback(() => {
     setShowIndicator(true);
     setTimeout(() => setShowIndicator(false), 2000); // Show for 2 seconds
-  };
+  }, []);
 
   return (
     <div className="w-full h-full absolute inset-0 bg-black">
